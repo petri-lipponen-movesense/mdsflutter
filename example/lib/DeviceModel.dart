@@ -1,9 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:mdsflutter/Mds.dart';
-
-import 'dart:developer' as developer;
 
 class DeviceModel extends ChangeNotifier {
   String? _serial;
@@ -12,12 +11,12 @@ class DeviceModel extends ChangeNotifier {
   String? get name => _name;
   String? get serial => _serial;
 
-  int? _accSubscription;
+  StreamSubscription? _accSubscription;
   String _accelerometerData = "";
   String get accelerometerData => _accelerometerData;
   bool get accelerometerSubscribed => _accSubscription != null;
 
-  int? _hrSubscription;
+  StreamSubscription? _hrSubscription;
   String _hrData = "";
   String get hrData => _hrData;
   bool get hrSubscribed => _hrSubscription != null;
@@ -30,49 +29,56 @@ class DeviceModel extends ChangeNotifier {
 
   DeviceModel(this._name, this._serial);
 
+  @override
+  void dispose() {
+    _accSubscription?.cancel();
+    _hrSubscription?.cancel();
+    super.dispose();
+  }
+
   void subscribeToAccelerometer() {
     _accelerometerData = "";
-    _accSubscription = Mds.subscribe(
-        Mds.createSubscriptionUri(_serial!, "/Meas/Acc/104"),
-        "{}",
-        (d, c) => {},
-        (e, c) => {},
-        (data) => _onNewAccelerometerData(data),
-        (e, c) => {}
-    );
+    _accSubscription = MdsAsync.subscribe(
+            Mds.createSubscriptionUri(_serial!, "/Meas/Acc/104"), "{}")
+        .listen((event) {
+      _onNewAccelerometerData(event);
+    });
+
     notifyListeners();
   }
 
-  void _onNewAccelerometerData(String data) {
-    Map<String, dynamic> accData = jsonDecode(data);
+  void _onNewAccelerometerData(dynamic accData) {
     Map<String, dynamic> body = accData["Body"];
     List<dynamic> accArray = body["ArrayAcc"];
     dynamic acc = accArray.last;
-    _accelerometerData = "x: " + acc["x"].toStringAsFixed(2) + "\ny: " + acc["y"].toStringAsFixed(2) + "\nz: " + acc["z"].toStringAsFixed(2);
+    _accelerometerData = "x: " +
+        acc["x"].toStringAsFixed(2) +
+        "\ny: " +
+        acc["y"].toStringAsFixed(2) +
+        "\nz: " +
+        acc["z"].toStringAsFixed(2);
     notifyListeners();
   }
 
   void unsubscribeFromAccelerometer() {
-    Mds.unsubscribe(_accSubscription!);
+    if (_accSubscription != null) {
+      _accSubscription!.cancel();
+    }
     _accSubscription = null;
     notifyListeners();
   }
 
   void subscribeToHr() {
     _hrData = "";
-    _hrSubscription = Mds.subscribe(
-      Mds.createSubscriptionUri(_serial!, "/Meas/HR"),
-      "{}",
-      (d, c) => {},
-      (e, c) => {},
-      (data) => _onNewHrData(data),
-      (e, c) => {}
-    );
+    _hrSubscription = MdsAsync.subscribe(
+            Mds.createSubscriptionUri(_serial!, "/Meas/HR"), "{}")
+        .listen((event) {
+      _onNewHrData(event);
+    });
     notifyListeners();
   }
 
-  void _onNewHrData(String data) {
-    Map<String, dynamic> hrData = jsonDecode(data);
+  void _onNewHrData(dynamic hrData) {
     Map<String, dynamic> body = hrData["Body"];
     double hr = body["average"];
     _hrData = hr.toStringAsFixed(1) + " bpm";
@@ -80,36 +86,35 @@ class DeviceModel extends ChangeNotifier {
   }
 
   void unsubscribeFromHr() {
-    Mds.unsubscribe(_hrSubscription!);
+    if (_hrSubscription != null) {
+      _hrSubscription!.cancel();
+    }
     _hrSubscription = null;
     notifyListeners();
   }
 
   void switchLed() {
+    debugPrint("switchLed()");
     Map<String, bool> contract = new Map<String, bool>();
     contract["isOn"] = !_ledStatus;
-    Mds.put(
-      Mds.createRequestUri(_serial!, "/Component/Led"),
-        jsonEncode(contract),
-            (data, code) {
-          _ledStatus = !_ledStatus;
-          notifyListeners();
-        },
-            (e, c) => {}
-    );
+    MdsAsync.put(Mds.createRequestUri(_serial!, "/Component/Led"),
+            jsonEncode(contract))
+        .then((value) {
+      debugPrint("switchLed then: $value");
+      _ledStatus = !_ledStatus;
+      notifyListeners();
+    });
   }
 
-  void getTemperature() {
-    Mds.get(
-        Mds.createRequestUri(_serial!, "/Meas/Temp"),
-        "{}",
-            (data, code) {
-          double kelvin = jsonDecode(data)["Content"]["Measurement"];
-          double temperatureVal = kelvin - 274.15;
-          _temperature = temperatureVal.toStringAsFixed(1) + " C";
-          notifyListeners();
-        },
-            (e, c) => {}
-    );
+  void getTemperature() async {
+    debugPrint("getTemperature()");
+    MdsAsync.get(Mds.createRequestUri(_serial!, "/Meas/Temp"), "{}")
+        .then((value) {
+      debugPrint("getTemperature value: $value");
+      double kelvin = value["Measurement"];
+      double temperatureVal = kelvin - 273.15;
+      _temperature = temperatureVal.toStringAsFixed(1) + " C";
+      notifyListeners();
+    });
   }
 }
