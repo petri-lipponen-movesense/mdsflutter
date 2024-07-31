@@ -11,7 +11,7 @@ class MdsImpl {
   int _idCounter = 0;
   int _subscriptionCounter = 0;
   Map _connectCbMap = Map<String, void Function(String)>();
-  Map _connectErrorCbMap = Map<String, void Function()>();
+  Map _connectErrorCbMap = Map<String, void Function(String)>();
   Map _disconnectCbMap = Map<String, void Function()>();
   List<String> _disconnectedDevices = [];
   Map _requestResultCbMap = Map<int, void Function(String, int)>();
@@ -32,7 +32,7 @@ class MdsImpl {
   }
 
   void connect(String address, void Function(String) onConnected,
-      void Function() onDisconnected, void Function() onConnectionError) {
+      void Function() onDisconnected, void Function(String) onConnectionError) {
     _connectCbMap[address] = onConnected;
     _disconnectCbMap[address] = onDisconnected;
     _connectErrorCbMap[address] = onConnectionError;
@@ -187,8 +187,10 @@ class MdsImpl {
         _onDisconnect(address);
         break;
       case "onConnectionError":
-        String? address = call.arguments;
-        _onConnectionError(address);
+        Map args = call.arguments;
+        debugPrint("case onConnectionError. args: ${call.arguments}");
+        String? address = args["address"];
+        _onConnectionError(address, args["error"]);
         break;
       case "onRequestResult":
         final Uint8List proto = call.arguments;
@@ -245,11 +247,11 @@ class MdsImpl {
     }
   }
 
-  void _onConnectionError(String? address) {
+  void _onConnectionError(String? address, String error) {
     if (_connectErrorCbMap.containsKey(address)) {
       developer.log("Device connection error, address: " + address!);
-      void Function() cb = _connectErrorCbMap[address];
-      cb();
+      void Function(String) cb = _connectErrorCbMap[address];
+      cb(error);
       _connectCbMap.remove(address);
       _disconnectCbMap.remove(address);
       _connectErrorCbMap.remove(address);

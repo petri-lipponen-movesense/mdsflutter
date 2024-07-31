@@ -9,6 +9,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.ParcelUuid
 import com.movesense.mds.*
+import android.util.Log
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -193,6 +194,15 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
 
 
   private fun connect(address: String) {
+    if (connectedDevicesList.contains(address)) {
+      // Already connected to this device. send connection error callback.
+      val argmap = hashMapOf(
+                "address" to address,
+                "error" to "Already connected to $address")
+      channel?.invokeMethod("onConnectionError", argmap)
+      return
+    }
+
     connectedDevicesList.add(address)
     mds!!.connect(address, object: MdsConnectionListener {
       override fun onConnect(address: String) {
@@ -212,7 +222,10 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
 
       override fun onError(exception: MdsException) {
         connectedDevicesList.remove(address)
-        channel?.invokeMethod("onConnectionError", exception.statusCode)
+        val argmap = hashMapOf(
+                "address" to address,
+                "error" to "$exception")
+        channel?.invokeMethod("onConnectionError", argmap)
       }
     })
   }
