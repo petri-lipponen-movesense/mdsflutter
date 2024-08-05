@@ -1,3 +1,12 @@
+## 2.0.1-beta2
+
+* Prevent duplicate connections to same device
+* Add error information to callback (Issue #20)
+
+## 2.0.1-beta1
+
+* Bugfix: MDS Not Creared on app kill
+
 ## 2.0.0
 
 * Fixed "MdsAsync.get returns null" (Issue #6)

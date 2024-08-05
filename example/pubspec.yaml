@@ -27,7 +27,8 @@ dependencies:
   provider: ^6.0.4
 
   permission_handler: ^10.4.3
-
+  path_provider: ^2.0.11
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

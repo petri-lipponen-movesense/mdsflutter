@@ -9,6 +9,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.ParcelUuid
 import com.movesense.mds.*
+import android.util.Log
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
@@ -24,10 +25,11 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
-  private lateinit var channel : MethodChannel
-  private lateinit var mds: Mds
+  private var channel : MethodChannel? = null
+  private var mds: Mds? = null
   private val subscriptionMap = mutableMapOf<Int, MdsSubscription>()
-  private lateinit var bluetoothAdapter: BluetoothAdapter
+  private val connectedDevicesList = mutableListOf<String>()
+  private var bluetoothAdapter: BluetoothAdapter? = null
   private val scanCb = object : ScanCallback() {
     override fun onScanResult(callbackType: Int, result: ScanResult) {
       with(result.device) {
@@ -35,18 +37,18 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
                 "address" to address,
                 "name" to name
         )
-        channel.invokeMethod("onNewScannedDevice", map)
+        channel?.invokeMethod("onNewScannedDevice", map)
       }
     }
 
     override fun onScanFailed(errorCode: Int) {
-      channel.invokeMethod("onScanFailed", null)
+      channel?.invokeMethod("onScanFailed", null)
     }
   }
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "mdsflutter")
-    channel.setMethodCallHandler(this)
+    channel?.setMethodCallHandler(this)
     mds = Mds.Builder().build(flutterPluginBinding.applicationContext)
     val manager = flutterPluginBinding.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     bluetoothAdapter = manager.adapter
@@ -65,7 +67,7 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
     @JvmStatic
     fun registerWith(registrar: Registrar) {
       val channel = MethodChannel(registrar.messenger(), "mdsflutter")
-      channel.setMethodCallHandler(MdsflutterPlugin())
+      channel?.setMethodCallHandler(MdsflutterPlugin())
     }
   }
 
@@ -158,23 +160,51 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
   }
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-    channel.setMethodCallHandler(null)
+    channel?.setMethodCallHandler(null)
+    channel = null
+
+    // Free bluetooth adapter
+    bluetoothAdapter = null
+
+    // Unsubscribe all subscriptions
+    subscriptionMap.forEach { (_, subscription) ->
+      subscription.unsubscribe()
+    }
+    subscriptionMap.clear()
+    
+    // And disconnect all connected devices
+    connectedDevicesList.forEach {
+      mds?.disconnect(it)
+    }
+
+    // And free the Mds instance
+    mds = null
   }
 
   private fun startScan() {
     val scanFilter1 = ScanFilter.Builder().setServiceUuid(ParcelUuid(UUID.fromString("61353090-8231-49cc-b57a-886370740041"))).build()
     val scanFilter2 = ScanFilter.Builder().setServiceUuid(ParcelUuid(UUID.fromString("0000FDF3-0000-1000-8000-00805F9B34FB"))).build()
     val settings = ScanSettings.Builder().build()
-    bluetoothAdapter.bluetoothLeScanner.startScan(listOf(scanFilter1, scanFilter2), settings, scanCb)
+    bluetoothAdapter!!.bluetoothLeScanner.startScan(listOf(scanFilter1, scanFilter2), settings, scanCb)
   }
 
   private fun stopScan() {
-    bluetoothAdapter.bluetoothLeScanner.stopScan(scanCb)
+    bluetoothAdapter!!.bluetoothLeScanner.stopScan(scanCb)
   }
 
 
   private fun connect(address: String) {
-    mds.connect(address, object: MdsConnectionListener {
+    if (connectedDevicesList.contains(address)) {
+      // Already connected to this device. send connection error callback.
+      val argmap = hashMapOf(
+                "address" to address,
+                "error" to "Already connected to $address")
+      channel?.invokeMethod("onConnectionError", argmap)
+      return
+    }
+
+    connectedDevicesList.add(address)
+    mds!!.connect(address, object: MdsConnectionListener {
       override fun onConnect(address: String) {
       }
 
@@ -183,21 +213,26 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
                 "address" to address,
                 "serial" to serial
         )
-        channel.invokeMethod("onConnect", map)
+        channel?.invokeMethod("onConnect", map)
       }
 
       override fun onDisconnect(address: String) {
-        channel.invokeMethod("onDisconnect", address)
+        channel?.invokeMethod("onDisconnect", address)
       }
 
       override fun onError(exception: MdsException) {
-        channel.invokeMethod("onConnectionError", exception.statusCode)
+        connectedDevicesList.remove(address)
+        val argmap = hashMapOf(
+                "address" to address,
+                "error" to "$exception")
+        channel?.invokeMethod("onConnectionError", argmap)
       }
     })
   }
 
   private fun disconnect(address: String) {
-    mds.disconnect(address)
+    connectedDevicesList.remove(address)
+    mds!!.disconnect(address)
   }
 
   private fun get(uri: String, contract: String, requestId: Int) {
@@ -208,7 +243,7 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = exception.statusCode ?: 0
           this.error = exception.message ?: ""
         }.build()
-        channel.invokeMethod("onRequestError", result.toByteArray())
+        channel?.invokeMethod("onRequestError", result.toByteArray())
       }
 
       override fun onSuccess(data: String, header: MdsHeader) {
@@ -217,10 +252,10 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = header.status
           this.data = data
         }.build()
-        channel.invokeMethod("onRequestResult", result.toByteArray())
+        channel?.invokeMethod("onRequestResult", result.toByteArray())
       }
     }
-    mds.get(uri, contract, handler)
+    mds!!.get(uri, contract, handler)
   }
 
   private fun put(uri: String, contract: String, requestId: Int) {
@@ -231,7 +266,7 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = exception.statusCode ?: 0
           this.error = exception.message ?: ""
         }.build()
-        channel.invokeMethod("onRequestError",result.toByteArray())
+        channel?.invokeMethod("onRequestError",result.toByteArray())
       }
 
       override fun onSuccess(data: String, header: MdsHeader) {
@@ -240,10 +275,10 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = header.status
           this.data = data
         }.build()
-        channel.invokeMethod("onRequestResult", result.toByteArray())
+        channel?.invokeMethod("onRequestResult", result.toByteArray())
       }
     }
-    mds.put(uri, contract, handler)
+    mds!!.put(uri, contract, handler)
   }
 
   private fun post(uri: String, contract: String, requestId: Int) {
@@ -254,7 +289,7 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = exception.statusCode ?: 0
           this.error = exception.message ?: ""
         }.build()
-        channel.invokeMethod("onRequestError", result.toByteArray())
+        channel?.invokeMethod("onRequestError", result.toByteArray())
       }
 
       override fun onSuccess(data: String, header: MdsHeader) {
@@ -263,10 +298,10 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = header.status
           this.data = data
         }.build()
-        channel.invokeMethod("onRequestResult", result.toByteArray())
+        channel?.invokeMethod("onRequestResult", result.toByteArray())
       }
     }
-    mds.post(uri, contract, handler)
+    mds!!.post(uri, contract, handler)
   }
 
   private fun del(uri: String, contract: String, requestId: Int) {
@@ -277,7 +312,7 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = exception.statusCode ?: 0
           this.error = exception.message ?: ""
         }.build()
-        channel.invokeMethod("onRequestError",result.toByteArray())
+        channel?.invokeMethod("onRequestError",result.toByteArray())
       }
 
       override fun onSuccess(data: String, header: MdsHeader) {
@@ -286,10 +321,10 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = header.status
           this.data = data
         }.build()
-        channel.invokeMethod("onRequestResult",result.toByteArray())
+        channel?.invokeMethod("onRequestResult",result.toByteArray())
       }
     }
-    mds.delete(uri, contract, handler)
+    mds!!.delete(uri, contract, handler)
   }
 
   private fun subscribe(uri: String, contract: String, requestId: Int, subscriptionId: Int) {
@@ -300,7 +335,7 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = exception.statusCode ?: 0
           this.error = exception.message ?: ""
         }.build()
-        channel.invokeMethod("onRequestError",result.toByteArray())
+        channel?.invokeMethod("onRequestError",result.toByteArray())
         subscriptionMap.remove(subscriptionId)
       }
 
@@ -310,7 +345,7 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = header.status
           this.data = data
         }.build()
-        channel.invokeMethod("onRequestResult",result.toByteArray())
+        channel?.invokeMethod("onRequestResult",result.toByteArray())
       }
     }
 
@@ -320,7 +355,7 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           this.subscriptionId = subscriptionId
           this.data = data
         }.build()
-        channel.invokeMethod("onNotification", result.toByteArray())
+        channel?.invokeMethod("onNotification", result.toByteArray())
       }
 
       override fun onError(exception: MdsException) {
@@ -329,11 +364,11 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
           statusCode = exception.statusCode ?: 0
           this.error = exception.message ?: ""
         }.build()
-        channel.invokeMethod("onNotificationError", result.toByteArray())
+        channel?.invokeMethod("onNotificationError", result.toByteArray())
       }
     }
 
-    val subscription = mds.subscribe(uri, contract, notificationListener, responseListener)
+    val subscription = mds!!.subscribe(uri, contract, notificationListener, responseListener)
     subscriptionMap[subscriptionId] = subscription
   }
 

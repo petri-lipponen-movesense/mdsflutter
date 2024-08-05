@@ -32,7 +32,7 @@ class Mds {
   /// subscribe to "MDS/ConnectedDevices" to get detailed device information
   /// upon connection.
   static void connect(String address, void Function(String) onConnected,
-      void Function() onDisconnected, void Function() onConnectionError) {
+      void Function() onDisconnected, void Function(String) onConnectionError) {
     MdsImpl().connect(address, onConnected, onDisconnected, onConnectionError);
   }
 

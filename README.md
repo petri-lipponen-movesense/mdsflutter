@@ -50,7 +50,7 @@ Mds.stopScan();
 Mds.connect(address,
             (serial) { /* onConnected */ },
             () { /* onDisconnected */ },
-            () { /* onConnectionError */ }
+            (error) { /* onConnectionError */ }
     );
 
 // Disconnect from a device
