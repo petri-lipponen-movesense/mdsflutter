@@ -151,29 +151,9 @@ class MdsAsync {
     MdsImpl().stopScan();
   }
 
-  /// Try to connect to a Movesense device with the given address. Address is
-  /// Bluetooth MAC address for Android devices and UUID for iOS devices. When
-  /// connection is established, onConnected is called with the device serial.
-  /// onDisconnected is called when device disconnects. onConnectionError is
-  /// called when an error occurs during connection attempt.
-  ///
-  /// Note: If you need DeviceInfo upon connection, you should manually
-  /// subscribe to "MDS/ConnectedDevices" to get detailed device information
-  /// upon connection.
-  // static void connect(String address,
-  //     void Function(String) onConnected,
-  //     void Function() onDisconnected,
-  //     void Function() onConnectionError) {
-  //   MdsImpl().connect(address, onConnected, onDisconnected, onConnectionError);
-  // }
-
-  // /// Disconnect from the device with the given address.
-  // static void disconnect(String address) {
-  //   MdsImpl().disconnect(address);
-  // }
-
   /// Make an async GET request for a resource. uri must include "suunto://" prefix
   /// and device serial if needed. contract must be a json string.
+  /// Returns a Future that completes with the response data in json format.
   static Future<dynamic> get(String uri, String contract) {
     final mdscompleter = Completer<dynamic>();
 
@@ -192,6 +172,7 @@ class MdsAsync {
 
   /// Make a PUT request for a resource. uri must include "suunto://" prefix
   /// and device serial if needed. contract must be a json string.
+  /// Returns a Future that completes with the response data in json format.
   static Future<dynamic> put(String uri, String contract) {
     final mdscompleter = Completer<dynamic>();
 
@@ -208,10 +189,8 @@ class MdsAsync {
   }
 
   /// Make a POST request for a resource. uri must include "suunto://" prefix
-  /// and device serial if needed. contract must be a json string. If the
-  /// request is successful, onSuccess is called with response data in json
-  /// string format, and status code. Upon error, onError is called with reason
-  /// and status code.
+  /// and device serial if needed. contract must be a json string.
+  /// Returns a Future that completes with the response data in json format.
   static Future<dynamic> post(String uri, String contract) {
     final mdscompleter = Completer<dynamic>();
 
@@ -226,10 +205,8 @@ class MdsAsync {
   }
 
   /// Make a DEL request for a resource. uri must include "suunto://" prefix
-  /// and device serial if needed. contract must be a json string. If the
-  /// request is successful, onSuccess is called with response data in json
-  /// string format, and status code. Upon error, onError is called with reason
-  /// and status code.
+  /// and device serial if needed. contract must be a json string.
+  /// Returns a Future that completes with the response data in json format.
   static Future<dynamic> del(String uri, String contract) {
     final mdscompleter = Completer<dynamic>();
 
@@ -244,26 +221,10 @@ class MdsAsync {
   }
 
   /// Make a SUBSCRIPTION request for a resource. uri must include "suunto://"
-  /// prefix and device serial if needed. contract must be a json string. If the
-  /// request is successful, onSuccess is called with response data in json
-  /// string format, and status code. Upon error, onError is called with reason
-  /// and status code. When there is a notification, onNotification is called
-  /// with notification data, which is in json string format.
-  /// onSubscriptionError is called when an error occurs with subscription, with
-  /// reason and error status code.
+  /// prefix and device serial if needed. contract must be a json string.
   ///
-  /// This call returns a subscription id. It must be held and used when
-  /// unsubscribing.
-  // static int subscribe(
-  //     String uri,
-  //     String contract,
-  //     void Function(String, int) onSuccess,
-  //     void Function(String, int) onError,
-  //     void Function(String) onNotification,
-  //     void Function(String, int) onSubscriptionError) {
-  //   return MdsImpl().subscribe(
-  //       uri, contract, onSuccess, onError, onNotification, onSubscriptionError);
-  // }
+  /// This call returns a Stream which will emit the notification data.
+  /// Unsubscribing the Stream will automatically unsubscribe from the subscription.
   static Stream<dynamic> subscribe(String uri, String contract) {
     final controller = StreamController<dynamic>();
 

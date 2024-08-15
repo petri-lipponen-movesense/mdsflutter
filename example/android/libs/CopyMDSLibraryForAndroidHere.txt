@@ -1,0 +1,1 @@
+Download the latest MDS library (libmds-xx.yy.zz-release.aar) for Android from https://bitbucket.org/movesense/movesense-mobile-lib/src/master/android/Movesense/, and copy it here.

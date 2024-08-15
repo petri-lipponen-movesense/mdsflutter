@@ -1,3 +1,8 @@
+## 2.1.1-rc1
+
+* Bugfix: Cocoapods can't access remote repository (Issue #13)
+* Bugfix: The MdsAsync API is not documented (Issue #14)
+
 ## 2.1.0
 
 * Prevent duplicate connections to same device

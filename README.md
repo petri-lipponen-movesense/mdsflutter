@@ -16,7 +16,18 @@ This is the development version for a new Async API. Please give any opinions, s
   pod 'Movesense', :git => 'ssh://git@altssh.bitbucket.org:443/movesense/movesense-mobile-lib.git'
   ```
 
-2. Remove "use_frameworks!" from your Podfile so that libmds.a can be used correctly.
+2. Set up your ios/Podfile as follows:
+```
+target 'Runner' do
+  use_modular_headers!
+  use_frameworks! :linkage => :static
+
+  pod 'Movesense', :git => 'https://bitbucket.org/movesense/movesense-mobile-lib.git'
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+end
+```
+so that MDS library is linked correctly. If you need to use frameworks that demand dynamic linking, [follow the instructions here](https://bitbucket.org/movesense/movesense-mobile-lib/issues/119/cannot-use-health-and-mdsflutter-depending).
 
 #### Android
 
