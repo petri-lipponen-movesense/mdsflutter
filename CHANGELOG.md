@@ -7,7 +7,7 @@
 
 * Prevent duplicate connections to same device
 * Add error information to callback (Issue #20)
-* Bugfix: MDS Not Creared on app kill
+* Bugfix: MDS Not Cleared on app kill
 
 ## 2.0.0
 
