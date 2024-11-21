@@ -65,7 +65,7 @@ class AppModel extends ChangeNotifier {
         device.address!,
         (serial) => _onDeviceMdsConnected(device.address, serial),
         () => _onDeviceDisconnected(device.address),
-        () => _onDeviceConnectError(device.address));
+        (_) => _onDeviceConnectError(device.address));
   }
 
   void disconnectFromDevice(Device device) {
