@@ -1,5 +1,12 @@
-## 2.1.1-rc1
+## 2.1.2
+ 
+* Bugfix: namespace not defined by 84rrry (PR #27)
+* Bugfix: Broken example
+* migrated from deprecated gradle syntax
+* ios version to 12
 
+## 2.1.1
+ 
 * Bugfix: Cocoapods can't access remote repository (Issue #13)
 * Bugfix: The MdsAsync API is not documented (Issue #14)
 

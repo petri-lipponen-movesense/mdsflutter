@@ -73,7 +73,6 @@ protobuf {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.google.protobuf:protobuf-javalite:3.24.3"
     // RxAndroidBle helper library
     implementation "com.polidea.rxandroidble2:rxandroidble:1.11.0"

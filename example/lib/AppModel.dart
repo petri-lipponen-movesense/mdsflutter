@@ -65,7 +65,7 @@ class AppModel extends ChangeNotifier {
         device.address!,
         (serial) => _onDeviceMdsConnected(device.address, serial),
         () => _onDeviceDisconnected(device.address),
-        (_) => _onDeviceConnectError(device.address));
+        (error) => _onDeviceConnectError(device.address, error));
   }
 
   void disconnectFromDevice(Device device) {
@@ -94,7 +94,8 @@ class AppModel extends ChangeNotifier {
     }
   }
 
-  void _onDeviceConnectError(String? address) {
+  void _onDeviceConnectError(String? address, String error) {
     _onDeviceDisconnected(address);
+    debugPrint("Error connecting to device: $error");
   }
 }
