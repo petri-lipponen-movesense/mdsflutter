@@ -27,6 +27,10 @@ apply plugin: 'kotlin-android'
 apply plugin: 'com.google.protobuf'
 
 android {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    namespace 'com.tugberka.mdsflutter'
     compileSdkVersion 29
 
     sourceSets {
