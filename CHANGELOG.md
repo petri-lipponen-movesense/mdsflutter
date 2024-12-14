@@ -1,3 +1,7 @@
+## 2.2.0
+
+* Feature: onBleConnected callback
+
 ## 2.1.2
  
 * Bugfix: namespace not defined by 84rrry (PR #27)

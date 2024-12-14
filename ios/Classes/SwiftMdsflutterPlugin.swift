@@ -1,18 +1,59 @@
 import Flutter
 import UIKit
+import CoreBluetooth
 
-public class SwiftMdsflutterPlugin: NSObject, FlutterPlugin {
-    
+public class SwiftMdsflutterPlugin: NSObject, FlutterPlugin, CBCentralManagerDelegate {
+    private var centralManager: CBCentralManager!
     private let mds = MdsService()
     private var subscriptions: Dictionary<Int, String>  = [:]
     private static var channel: FlutterMethodChannel? = nil
+    private var peripheralDict: Dictionary<String, CBPeripheral>  = [:]
+    
+    override init() {
+        super.init()
+        // Create central manager so that we can receive BLE connection events
+        self.centralManager = CBCentralManager(delegate: self, queue: nil)
+    }
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         channel = FlutterMethodChannel(name: "mdsflutter", binaryMessenger: registrar.messenger())
         let instance = SwiftMdsflutterPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel!)
     }
-        
+    
+    // Called when ble connection succeeded
+    public func centralManager(_ central: CBCentralManager,
+        didConnect peripheral: CBPeripheral)
+    {
+        SwiftMdsflutterPlugin.channel?.invokeMethod("onBleConnected", arguments: peripheral.identifier.uuidString)
+    }
+
+    // Called when the central manager's state is updated
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        switch central.state {
+        case .poweredOn:
+            //print("SwiftMdsflutterPlugin: Bluetooth is powered on")
+            break
+        case .poweredOff:
+            //print("BSwiftMdsflutterPlugin: luetooth is powered off")
+            break
+        case .resetting:
+            //print("SwiftMdsflutterPlugin: Bluetooth is resetting")
+            break
+        case .unauthorized:
+            //print("SwiftMdsflutterPlugin: Bluetooth is unauthorized")
+            break
+        case .unsupported:
+            //print("SwiftMdsflutterPlugin: Bluetooth is unsupported")
+            break
+        case .unknown:
+            //print("SwiftMdsflutterPlugin: Bluetooth state is unknown")
+            break
+        @unknown default:
+            print("SwiftMdsflutterPlugin: A previously unknown central manager state occurred")
+        }
+    }
+
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "startScan": do {
@@ -30,6 +71,17 @@ public class SwiftMdsflutterPlugin: NSObject, FlutterPlugin {
             if let myArgs = args as? [String: Any],
                let address = myArgs["address"] as? String {
                 self.mds.connectDevice(address)
+                // Connect this central manager to the peripheral
+                // just so we get the BLE connection events
+                let peripheralId = UUID(uuidString: address)
+                let previouslyConnected = centralManager
+                    .retrievePeripherals(withIdentifiers: [peripheralId!])
+                    .first
+                // Save the peripheral so we can receive events to it
+                peripheralDict[address] = previouslyConnected
+                if (previouslyConnected != nil) {
+                    self.centralManager.connect(previouslyConnected!, options: nil)
+                }
               result("Params received on iOS = \(address)")
             } else {
               result(FlutterError(code: "-1", message: "iOS could not extract " +
@@ -46,6 +98,10 @@ public class SwiftMdsflutterPlugin: NSObject, FlutterPlugin {
                let address = myArgs["address"] as? String {
               result("Params received on iOS = \(address)")
                 self.mds.disconnectDevice(address)
+                // Also call disconnect on local central manager
+                if (peripheralDict[address] != nil) {
+                    self.centralManager.cancelPeripheralConnection(peripheralDict[address]!)
+                }
             } else {
               result(FlutterError(code: "-1", message: "iOS could not extract " +
                  "flutter arguments in method: (disconnect)", details: nil))

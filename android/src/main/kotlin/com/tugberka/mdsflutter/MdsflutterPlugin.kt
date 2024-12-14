@@ -206,6 +206,7 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
     connectedDevicesList.add(address)
     mds!!.connect(address, object: MdsConnectionListener {
       override fun onConnect(address: String) {
+        channel?.invokeMethod("onBleConnected", address)
       }
 
       override fun onConnectionComplete(address: String, serial: String) {

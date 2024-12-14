@@ -11,6 +11,7 @@ class MdsImpl {
   int _idCounter = 0;
   int _subscriptionCounter = 0;
   Map _connectCbMap = Map<String, void Function(String)>();
+  Map _bleConnectedCbMap = Map<String, void Function(String)>();
   Map _connectErrorCbMap = Map<String, void Function(String)>();
   Map _disconnectCbMap = Map<String, void Function()>();
   List<String> _disconnectedDevices = [];
@@ -31,9 +32,14 @@ class MdsImpl {
     _channel.invokeMethod('stopScan', null);
   }
 
-  void connect(String address, void Function(String) onConnected,
-      void Function() onDisconnected, void Function(String) onConnectionError) {
+  void connect(
+      String address,
+      void Function(String) onConnected,
+      void Function() onDisconnected,
+      void Function(String) onConnectionError,
+      void Function(String)? onBleConnected) {
     _connectCbMap[address] = onConnected;
+    if (onBleConnected != null) _bleConnectedCbMap[address] = onBleConnected;
     _disconnectCbMap[address] = onDisconnected;
     _connectErrorCbMap[address] = onConnectionError;
     _channel.invokeMethod('connect', {"address": address});
@@ -182,6 +188,10 @@ class MdsImpl {
         Map args = call.arguments;
         _onConnect(args["address"], args["serial"]);
         break;
+      case "onBleConnected":
+        String? address = call.arguments;
+        _onBleConnected(address);
+        break;
       case "onDisconnect":
         String? address = call.arguments;
         _onDisconnect(address);
@@ -232,6 +242,13 @@ class MdsImpl {
     }
   }
 
+  void _onBleConnected(String? address) {
+    if (address != null && _bleConnectedCbMap.containsKey(address)) {
+      void Function(String) cb = _bleConnectedCbMap[address];
+      cb(address);
+    }
+  }
+
   void _onDisconnect(String? address) {
     if (_disconnectCbMap.containsKey(address)) {
       developer.log("Device disconnected, address: " + address!);
@@ -240,6 +257,7 @@ class MdsImpl {
       // Only remove from the map if the disconnect was initiated by user
       if (_disconnectedDevices.contains(address)) {
         _connectCbMap.remove(address);
+        _bleConnectedCbMap.remove(address);
         _disconnectCbMap.remove(address);
         _connectErrorCbMap.remove(address);
         _disconnectedDevices.remove(address);
@@ -253,6 +271,7 @@ class MdsImpl {
       void Function(String) cb = _connectErrorCbMap[address];
       cb(error);
       _connectCbMap.remove(address);
+      _bleConnectedCbMap.remove(address);
       _disconnectCbMap.remove(address);
       _connectErrorCbMap.remove(address);
     }
