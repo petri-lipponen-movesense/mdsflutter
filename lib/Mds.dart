@@ -31,9 +31,14 @@ class Mds {
   /// Note: If you need DeviceInfo upon connection, you should manually
   /// subscribe to "MDS/ConnectedDevices" to get detailed device information
   /// upon connection.
-  static void connect(String address, void Function(String) onConnected,
-      void Function() onDisconnected, void Function(String) onConnectionError) {
-    MdsImpl().connect(address, onConnected, onDisconnected, onConnectionError);
+  static void connect(
+      String address,
+      void Function(String) onConnected,
+      void Function() onDisconnected,
+      void Function(String) onConnectionError,
+      void Function(String)? onBleConnected) {
+    MdsImpl().connect(address, onConnected, onDisconnected, onConnectionError,
+        onBleConnected);
   }
 
   /// Disconnect from the device with the given address.

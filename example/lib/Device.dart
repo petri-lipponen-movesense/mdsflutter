@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:mdsflutter_example/DeviceConnectionStatus.dart';
 
 class Device {
@@ -18,7 +19,13 @@ class Device {
   DeviceConnectionStatus get connectionStatus => _connectionStatus;
 
   void onConnecting() => _connectionStatus = DeviceConnectionStatus.CONNECTING;
+  void onBleConnected(String address) {
+    debugPrint("Device: onBleConnected $address");
+    _connectionStatus = DeviceConnectionStatus.BLE_CONNECTED;
+  }
+
   void onMdsConnected(String serial) {
+    debugPrint("onMdsConnected, serial: $serial");
     _serial = serial;
     _connectionStatus = DeviceConnectionStatus.CONNECTED;
   }

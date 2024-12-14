@@ -65,7 +65,8 @@ class AppModel extends ChangeNotifier {
         device.address!,
         (serial) => _onDeviceMdsConnected(device.address, serial),
         () => _onDeviceDisconnected(device.address),
-        (error) => _onDeviceConnectError(device.address, error));
+        (error) => _onDeviceConnectError(device.address, error),
+        (address) => _onDeviceBleConnected(address));
   }
 
   void disconnectFromDevice(Device device) {
@@ -82,6 +83,14 @@ class AppModel extends ChangeNotifier {
     if (_onDeviceMdsConnectedCb != null) {
       _onDeviceMdsConnectedCb!.call(foundDevice);
     }
+  }
+
+  void _onDeviceBleConnected(String address) {
+    Device foundDevice =
+        _deviceList.firstWhere((element) => element.address == address);
+
+    foundDevice.onBleConnected(address);
+    notifyListeners();
   }
 
   void _onDeviceDisconnected(String? address) {
