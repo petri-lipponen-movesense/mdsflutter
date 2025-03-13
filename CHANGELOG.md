@@ -1,3 +1,7 @@
+## 2.3.0
+
+* Removing depricated PluginRegistry.Registrar
+
 ## 2.2.0
 
 * Feature: onBleConnected callback
