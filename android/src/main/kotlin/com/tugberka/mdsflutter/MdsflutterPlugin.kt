@@ -16,7 +16,6 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry.Registrar
 import java.util.*
 
 /** MdsflutterPlugin */
@@ -47,28 +46,11 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
   }
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    channel = MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "mdsflutter")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "mdsflutter")
     channel?.setMethodCallHandler(this)
     mds = Mds.Builder().build(flutterPluginBinding.applicationContext)
     val manager = flutterPluginBinding.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     bluetoothAdapter = manager.adapter
-  }
-
-  // This static function is optional and equivalent to onAttachedToEngine. It supports the old
-  // pre-Flutter-1.12 Android projects. You are encouraged to continue supporting
-  // plugin registration via this function while apps migrate to use the new Android APIs
-  // post-flutter-1.12 via https://flutter.dev/go/android-project-migration.
-  //
-  // It is encouraged to share logic between onAttachedToEngine and registerWith to keep
-  // them functionally equivalent. Only one of onAttachedToEngine or registerWith will be called
-  // depending on the user's project. onAttachedToEngine or registerWith must both be defined
-  // in the same class.
-  companion object {
-    @JvmStatic
-    fun registerWith(registrar: Registrar) {
-      val channel = MethodChannel(registrar.messenger(), "mdsflutter")
-      channel?.setMethodCallHandler(MdsflutterPlugin())
-    }
   }
 
   override fun onMethodCall(call: MethodCall, result: Result) {
@@ -206,7 +188,6 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
     connectedDevicesList.add(address)
     mds!!.connect(address, object: MdsConnectionListener {
       override fun onConnect(address: String) {
-        channel?.invokeMethod("onBleConnected", address)
       }
 
       override fun onConnectionComplete(address: String, serial: String) {
