@@ -26,7 +26,7 @@ dependencies:
 
   provider: ^6.0.4
 
-  permission_handler: ^10.4.3
+  permission_handler: ^11.4.0
   path_provider: ^2.0.11
   
 dev_dependencies:
