@@ -16,7 +16,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import io.flutter.plugin.common.PluginRegistry
+
 import java.util.*
 
 /** MdsflutterPlugin */
@@ -47,7 +47,7 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
   }
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    channel = MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "mdsflutter")
+    channel = MethodChannel(flutterPluginBinding.binaryMessenger, "mdsflutter")
     channel?.setMethodCallHandler(this)
     mds = Mds.Builder().build(flutterPluginBinding.applicationContext)
     val manager = flutterPluginBinding.applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -189,7 +189,6 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
     connectedDevicesList.add(address)
     mds!!.connect(address, object: MdsConnectionListener {
       override fun onConnect(address: String) {
-        channel?.invokeMethod("onBleConnected", address)
       }
 
       override fun onConnectionComplete(address: String, serial: String) {
