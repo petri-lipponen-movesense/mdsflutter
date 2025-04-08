@@ -12,3 +12,4 @@ example/ios/Podfile.lock
 mdsflutter.iml
 example/android/libs/*.aar
 .vscode/*
+.cxx/

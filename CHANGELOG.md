@@ -1,6 +1,10 @@
 ## 2.3.0
 
-* Removing depricated PluginRegistry.Registrar
+* Removing depricated PluginRegistry.Registrar [PR #35, #32]
+* Merged other PRs [#33, #34]
+* Updated to build with flutter 3.29 and Android SDK 35
+
+Thanks for the PRs @84rry, @Panosfunk & @ksmets!
 
 ## 2.2.0
 
