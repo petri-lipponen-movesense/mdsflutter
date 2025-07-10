@@ -22,9 +22,10 @@ class MdsImpl {
   Map _serialToAddressMap = Map<String?, String?>();
   void Function(String?, String?)? _newScannedDeviceCb;
 
-  void startScan(void Function(String?, String?) onNewDeviceFound) {
+  void startScan(
+      void Function(String?, String?) onNewDeviceFound, bool includeDfu) {
     _newScannedDeviceCb = onNewDeviceFound;
-    _channel.invokeMethod('startScan', null);
+    _channel.invokeMethod('startScan', {"includeDfu": includeDfu});
   }
 
   void stopScan() {

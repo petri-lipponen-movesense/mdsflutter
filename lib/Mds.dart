@@ -13,8 +13,9 @@ class Mds {
   /// devices will get UUID as the address parameter. Scanning is terminated
   /// automatically after 60 seconds. Only devices with Movesense services are
   /// returned.
-  static void startScan(void Function(String?, String?) onNewDeviceFound) {
-    MdsImpl().startScan(onNewDeviceFound);
+  static void startScan(void Function(String?, String?) onNewDeviceFound,
+      {bool includeDfu = false}) {
+    MdsImpl().startScan(onNewDeviceFound, includeDfu);
   }
 
   /// Stops the ongoing scan.
@@ -147,8 +148,9 @@ class MdsAsync {
   /// devices will get UUID as the address parameter. Scanning is terminated
   /// automatically after 60 seconds. Only devices with Movesense services are
   /// returned.
-  static void startScan(void Function(String?, String?) onNewDeviceFound) {
-    MdsImpl().startScan(onNewDeviceFound);
+  static void startScan(void Function(String?, String?) onNewDeviceFound,
+      {bool includeDfu = false}) {
+    MdsImpl().startScan(onNewDeviceFound, includeDfu);
   }
 
   /// Stops the ongoing scan.
