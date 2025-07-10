@@ -57,7 +57,17 @@ public class SwiftMdsflutterPlugin: NSObject, FlutterPlugin, CBCentralManagerDel
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "startScan": do {
-            self.mds.startScan({device in self.handleScannedDevice(device: device)}, {})
+            guard let args = call.arguments else {
+                self.mds.startScan({device in self.handleScannedDevice(device: device)}, {}, false)
+                return
+            }
+            
+            if let myArgs = args as? [String: Any],
+               let includeDfu = myArgs["includeDfu"] as? Bool {
+                self.mds.startScan({device in self.handleScannedDevice(device: device)}, {}, includeDfu)
+            } else {
+                self.mds.startScan({device in self.handleScannedDevice(device: device)}, {}, false)
+            }
         }
         case "stopScan": do {
             self.mds.stopScan()
