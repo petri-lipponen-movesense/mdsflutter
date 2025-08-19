@@ -163,13 +163,16 @@ public class SwiftMdsflutterPlugin: NSObject, FlutterPlugin, CBCentralManagerDel
               return
             }
             if let myArgs = args as? [String: Any],
-               let subscriptionId = myArgs["subscriptionId"] as? Int,
-               let uri = self.subscriptions[subscriptionId] {
-                self.mds.unsubscribe(uri)
-                result("Params received on iOS")
+               let subscriptionId = myArgs["subscriptionId"] as? Int {
+               if let uri = self.subscriptions[subscriptionId] {
+                    self.mds.unsubscribe(uri)
+                    result("Params received on iOS")
+                } else {
+                    result("Subscription not present anymore")
+                }
             } else {
-              result(FlutterError(code: "-1", message: "iOS could not extract " +
-                 "flutter arguments in method: (unsubscribe)", details: nil))
+              result(FlutterError(code: "-1", message: "iOS could not cast " +
+                 "flutter arguments to correct type in method: (unsubscribe)", details: args))
             }
         default: break
         }
