@@ -138,6 +138,11 @@ class MdsError {
   int status;
   String error;
   MdsError(this.status, this.error);
+
+  @override
+  String toString() {
+    return 'MdsError(status: $status, error: $error)';
+  }
 }
 
 class MdsAsync {
