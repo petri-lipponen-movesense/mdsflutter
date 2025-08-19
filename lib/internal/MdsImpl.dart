@@ -134,7 +134,8 @@ class MdsImpl {
 
   void unsubscribe(int subscriptionId) {
     if (_notifyCbMap.containsKey(subscriptionId)) {
-      _channel.invokeMethod('unsubscribe', {"subscriptionId": subscriptionId});
+      _channel.invokeMethod(
+          'unsubscribe', <String, dynamic>{"subscriptionId": subscriptionId});
       _notifyCbMap.remove(subscriptionId);
       _subscriptionErrorCbMap.remove(subscriptionId);
     }
