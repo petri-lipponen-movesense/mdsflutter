@@ -113,7 +113,7 @@ public class SwiftMdsflutterPlugin: NSObject, FlutterPlugin, CBCentralManagerDel
         case "subscribe":
             guard let args = call.arguments else {
                 result(FlutterError(code: "-1", message: "iOS could not extract " +
-                "flutter arguments in method: (connect)", details: nil))
+                "flutter arguments in method: (subscribe)", details: nil))
               return
             }
             if let myArgs = args as? [String: Any],
@@ -154,22 +154,25 @@ public class SwiftMdsflutterPlugin: NSObject, FlutterPlugin, CBCentralManagerDel
                 })
             } else {
               result(FlutterError(code: "-1", message: "iOS could not extract " +
-                 "flutter arguments in method: (get)", details: nil))
+                 "flutter arguments in method: (subscribe)", details: nil))
             }
         case "unsubscribe":
             guard let args = call.arguments else {
                 result(FlutterError(code: "-1", message: "iOS could not extract " +
-                "flutter arguments in method: (connect)", details: nil))
+                "flutter arguments in method: (unsubscribe)", details: nil))
               return
             }
             if let myArgs = args as? [String: Any],
-               let subscriptionId = myArgs["subscriptionId"] as? Int,
-               let uri = self.subscriptions[subscriptionId] {
-                self.mds.unsubscribe(uri)
-                result("Params received on iOS")
+               let subscriptionId = myArgs["subscriptionId"] as? Int {
+               if let uri = self.subscriptions[subscriptionId] {
+                    self.mds.unsubscribe(uri)
+                    result("Params received on iOS")
+                } else {
+                    result("Subscription not present anymore")
+                }
             } else {
-              result(FlutterError(code: "-1", message: "iOS could not extract " +
-                 "flutter arguments in method: (connect)", details: nil))
+              result(FlutterError(code: "-1", message: "iOS could not cast " +
+                 "flutter arguments to correct type in method: (unsubscribe)", details: args))
             }
         default: break
         }
@@ -178,7 +181,7 @@ public class SwiftMdsflutterPlugin: NSObject, FlutterPlugin, CBCentralManagerDel
     private func handleRequest(call: FlutterMethodCall, result: @escaping FlutterResult, callName: String) {
         guard let args = call.arguments else {
             result(FlutterError(code: "-1", message: "iOS could not extract " +
-            "flutter arguments in method: (connect)", details: nil))
+            "flutter arguments in method: (" + callName + ")", details: nil))
           return
         }
         if let myArgs = args as? [String: Any],
@@ -223,7 +226,7 @@ public class SwiftMdsflutterPlugin: NSObject, FlutterPlugin, CBCentralManagerDel
             }
         } else {
           result(FlutterError(code: "-1", message: "iOS could not extract " +
-             "flutter arguments in method: (get)", details: nil))
+             "flutter arguments in method: (" + callName + ")", details: nil))
         }
     }
     

@@ -42,12 +42,12 @@ class MdsImpl {
     if (onBleConnected != null) _bleConnectedCbMap[address] = onBleConnected;
     _disconnectCbMap[address] = onDisconnected;
     _connectErrorCbMap[address] = onConnectionError;
-    _channel.invokeMethod('connect', {"address": address});
+    _channel.invokeMethod('connect', <String, dynamic>{"address": address});
   }
 
   void disconnect(String address) {
     _disconnectedDevices.add(address);
-    _channel.invokeMethod('disconnect', {"address": address});
+    _channel.invokeMethod('disconnect', <String, dynamic>{"address": address});
   }
 
   void get(String uri, String contract, void Function(String, int) onSuccess,
@@ -134,7 +134,8 @@ class MdsImpl {
 
   void unsubscribe(int subscriptionId) {
     if (_notifyCbMap.containsKey(subscriptionId)) {
-      _channel.invokeMethod('unsubscribe', {"subscriptionId": subscriptionId});
+      _channel.invokeMethod(
+          'unsubscribe', <String, dynamic>{"subscriptionId": subscriptionId});
       _notifyCbMap.remove(subscriptionId);
       _subscriptionErrorCbMap.remove(subscriptionId);
     }
