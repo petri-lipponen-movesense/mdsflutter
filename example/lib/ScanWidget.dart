@@ -14,6 +14,7 @@ class ScanWidget extends StatefulWidget {
 
 class _ScanWidgetState extends State<ScanWidget> {
   late AppModel model;
+  bool _includeDfu = false;
 
   @override
   void initState() {
@@ -61,7 +62,7 @@ class _ScanWidgetState extends State<ScanWidget> {
     if (model.isScanning) {
       model.stopScan();
     } else {
-      model.startScan();
+      model.startScan(_includeDfu);
     }
   }
 
@@ -76,6 +77,15 @@ class _ScanWidgetState extends State<ScanWidget> {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                SwitchListTile(
+                  title: const Text('Include DFU'),
+                  value: _includeDfu,
+                  onChanged: (bool value) {
+                    setState(() {
+                      _includeDfu = value;
+                    });
+                  },
+                ),
                 ElevatedButton(
                   onPressed: onScanButtonPressed,
                   child: Text(model.scanButtonText),

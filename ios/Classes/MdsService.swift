@@ -22,13 +22,14 @@ final public class MdsService: NSObject {
     
     /// Start looking for Movesense devices
     public func startScan(_ deviceFound : @escaping (MovesenseDevice) -> (),
-                          _ scanCompleted: @escaping () -> ()) {
+                          _ scanCompleted: @escaping () -> (),
+                          _ includeDfu: Bool) {
             self.bleController.startScan(deviceFound: { device in
                 self.devices[device.serial] = device
                 deviceFound(device)
             },scanReady : {
                 scanCompleted()
-            });
+            }, includeDfu: includeDfu);
     }
     
     /// Stop looking for Movesense devices
