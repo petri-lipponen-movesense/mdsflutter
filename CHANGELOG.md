@@ -1,3 +1,9 @@
+## 2.3.1
+
+* Bugfix: unsubscribe would result in FlutterError [#42]
+
+Thanks for the PR, @tim-alenus!
+
 ## 2.3.0
 
 * Removing depricated PluginRegistry.Registrar [PR #35, #32]
