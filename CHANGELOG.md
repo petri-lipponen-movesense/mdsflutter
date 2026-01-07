@@ -1,3 +1,10 @@
+## 2.3.99-alpha1
+
+* Technical: Updated to latest Android SDK (36)
+* Technical: Updated to protobuf 6.0.0
+
+**Note**: Minimum iOS version is now 13
+
 ## 2.3.1
 
 * Bugfix: unsubscribe would result in FlutterError [#42]
