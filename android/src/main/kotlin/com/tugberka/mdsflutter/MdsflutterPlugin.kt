@@ -131,7 +131,8 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
         } ?: result.notImplemented()
       }
       "startScan" -> {
-        startScan()
+        val includeDfu = call.argument<Boolean>("includeDfu")
+        startScan(includeDfu ?: false)
         result.success(null)
       }
       "stopScan" -> {
@@ -164,11 +165,16 @@ class MdsflutterPlugin: FlutterPlugin, MethodCallHandler {
     mds = null
   }
 
-  private fun startScan() {
+  private fun startScan(includeDfu: Boolean) {
     val scanFilter1 = ScanFilter.Builder().setServiceUuid(ParcelUuid(UUID.fromString("61353090-8231-49cc-b57a-886370740041"))).build()
     val scanFilter2 = ScanFilter.Builder().setServiceUuid(ParcelUuid(UUID.fromString("0000FDF3-0000-1000-8000-00805F9B34FB"))).build()
+    val dfuScanFilter = ScanFilter.Builder().setServiceUuid(ParcelUuid(UUID.fromString("0000FE59-0000-1000-8000-00805F9B34FB"))).build()
     val settings = ScanSettings.Builder().build()
-    bluetoothAdapter!!.bluetoothLeScanner.startScan(listOf(scanFilter1, scanFilter2), settings, scanCb)
+    val scanFilters = mutableListOf(scanFilter1, scanFilter2)
+    if (includeDfu) {
+      scanFilters.add(dfuScanFilter)
+    }
+    bluetoothAdapter!!.bluetoothLeScanner.startScan(scanFilters, settings, scanCb)
   }
 
   private fun stopScan() {

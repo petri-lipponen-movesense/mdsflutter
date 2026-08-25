@@ -27,7 +27,7 @@ class AppModel extends ChangeNotifier {
     _onDeviceDisonnectedCb = cb;
   }
 
-  void startScan() {
+  void startScan([bool includeDfu = false]) {
     _deviceList.forEach((device) {
       if (device.connectionStatus == DeviceConnectionStatus.CONNECTED) {
         disconnectFromDevice(device);
@@ -44,7 +44,7 @@ class AppModel extends ChangeNotifier {
           _deviceList.add(device);
           notifyListeners();
         }
-      });
+      }, includeDfu: includeDfu);
       _isScanning = true;
       notifyListeners();
     } on PlatformException {

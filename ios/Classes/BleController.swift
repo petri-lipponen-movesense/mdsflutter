@@ -5,7 +5,7 @@ import CoreBluetooth
 final class BleController: NSObject, CBCentralManagerDelegate {
     static let SCAN_TIMEOUT = 60.0
     let MOVESENSE_SERVICES = [CBUUID(string: "61353090-8231-49cc-b57a-886370740041"), CBUUID(string: "0000FDF3-0000-1000-8000-00805F9B34FB")]
-    
+        let MOVESENSE_DFU_SERVICE = CBUUID(string: "0000FE59-0000-1000-8000-00805F9B34FB")
     private var centralManager : CBCentralManager?
     private var scanTimer = Timer() //!< When timer triggers, scanning is stopped
     private var knownDevices = Dictionary<UUID, String>() //!< Map UUID to Serial
@@ -59,14 +59,21 @@ final class BleController: NSObject, CBCentralManagerDelegate {
         }
     }
     
-    func startScan(deviceFound: @escaping (MovesenseDevice) -> (), scanReady: @escaping () -> ()) {
+
+
+    func startScan(deviceFound: @escaping (MovesenseDevice) -> (), scanReady: @escaping () -> (), includeDfu: Bool) {
         if (self.centralManager?.isScanning)! {
             return
         }
         
         self.addDeviceCallback = deviceFound
         
-        self.centralManager?.scanForPeripherals(withServices: MOVESENSE_SERVICES, options:
+        var services = MOVESENSE_SERVICES
+        if (includeDfu) {
+            services.append(MOVESENSE_DFU_SERVICE)
+        }
+        
+        self.centralManager?.scanForPeripherals(withServices: services, options:
             [CBCentralManagerScanOptionAllowDuplicatesKey: true]);
         
         self.scanTimer.invalidate()
